@@ -1,0 +1,17 @@
+---
+- name: k8s deployment update
+  hosts: kuber_local
+  vars:
+    myproject: "ansible-examples"
+  tasks:
+    - name: namespace present
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ myproject }}"
+        state: present
+    - name: deployment present
+      kubernetes.core.k8s:
+        src: deployment.yml
+        namespace: "{{ myproject }}"
+        state: present

@@ -1,0 +1,85 @@
+
+---
+- name: deploy httpd container
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    webroot: "/webroot"
+  tasks:
+    - name: Install Docker
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: latest
+
+    - name: Check if Docker daemon configuration exists
+      ansible.builtin.stat:
+        path: /etc/docker/daemon.json
+      register: daemon_config
+
+    - name: Create Docker daemon configuration file
+      ansible.builtin.file:
+        path: /etc/docker/daemon.json
+        state: touch
+        owner: root
+        group: root
+        mode: '0644'
+      when: not daemon_config.stat.exists
+
+    - name: add Docker daemon configuration
+      ansible.builtin.copy:
+        content: |
+          {
+            "insecure-registries": ["iranetrepo-1:5000"]
+          }
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: '0644'
+      when: not daemon_config.stat.exists
+
+    - name: docker restart
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+        enabled: true
+      when: not daemon_config.stat.exists
+
+    - name: Pull httpd image
+      community.docker.docker_image:
+        name: iranetrepo-1:5000/httpd
+        source: pull
+        tag: latest
+
+    - name: Create webroot directory
+      ansible.builtin.file:
+        path: "{{ webroot }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: '0777'
+        setype: "container_share_t"
+
+    - name: Copy custom index.html
+      ansible.builtin.copy:
+        dest: "{{ webroot }}/index.html"
+        content: |
+          Custom Web Page
+        setype: "container_share_t"
+
+    - name: Run httpd container
+      community.docker.docker_container:
+        name: webserver
+        image: iranetrepo-1:5000/httpd
+        state: started
+        detach: true
+        expose:
+          - 80
+        ports:
+          - 8080:80
+        volumes:
+          - "{{ webroot }}:/usr/local/apache2/htdocs/"
+

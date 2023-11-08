@@ -1,0 +1,12 @@
+---
+- name: k8s ns
+  hosts: kuber_master
+  tasks:
+    - name: list all namespaces
+      ansible.builtin.set_fact:
+        projects: "{{ query('kubernetes.core.k8s', api_version='v1',
+        kind='Namespace') }}"
+
+    - name: display the result
+      ansible.builtin.debug:
+        msg: "{{ projects }}"

@@ -1,0 +1,51 @@
+---
+- name: k8s ns
+  hosts: kuber_master
+  vars:
+    myproject: "ansible-examples"
+  tasks:
+    - name: Install pip
+      ansible.builtin.yum:
+        name:
+          - python
+          - pip
+        state: latest
+
+    - name: Check if pip configuration exists
+      ansible.builtin.stat:
+        path: /etc/pip.conf
+      register: pip_config
+
+    - name: Create pip configuration file
+      ansible.builtin.file:
+        path: /etc/pip.conf
+        state: touch
+        owner: root
+        group: root
+        mode: '0644'
+      when: not pip_config.stat.exists
+
+    - name: add pip configuration
+      ansible.builtin.copy:
+        content: |
+          [global]
+          index = http://iranetrepo-1:8081/repository/PyPi-Repo/pypi
+          index-url = http://iranetrepo-1:8081/repository/PyPi-Repo/simple
+          trusted-host = iranetrepo-1
+        dest: /etc/pip.conf
+        owner: root
+        group: root
+        mode: '0644'
+      when: not pip_config.stat.exists
+
+    - name: install pre-requisites
+      pip:
+        name:
+          - pyyaml
+          - kubernetes
+    - name: namespace present
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ myproject }}"
+        state: present

@@ -1,0 +1,3 @@
+- op: add
+  path: /metadata/labels/new-label
+  value: new-value

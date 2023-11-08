@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="YamllintSettings">
+    <enabled>true</enabled>
+    <binPath>C:\Users\m_mehrabi.IRANET\AppData\Roaming\Python\Python311\Scripts\yamllint.exe</binPath>
+    <disabledRules>
+      <set>
+        <option value="empty-lines" />
+        <option value="truthy" />
+      </set>
+    </disabledRules>
+  </component>
+</project>
